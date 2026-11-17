@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | Secure Video Portal</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+    // If user is already authenticated in this session, redirect directly to video page
+    if (sessionStorage.getItem('isLoggedIn') === 'true') {
+      window.location.replace('video.html');
+    }
+  </script>
+</head>
+<body class="login-body">
+
+  <div class="login-card" id="loginCard">
+    <div class="login-header">
+      <div class="text-center mb-3">
+        <img src="img/chooch-logo.svg" alt="Chooch Logo" style="max-height: 44px; max-width: 190px; object-fit: contain;">
+      </div>
+      <h3 class="fw-bold mb-1">Welcome Back</h3>
+      <p class="text-muted small">Please sign in to access the video gallery</p>
+    </div>
+
+    <div class="login-body-content">
+      <!-- Error Message Alert -->
+      <div id="errorAlert" class="alert alert-danger d-none align-items-center py-2 px-3 small" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2 fs-6"></i>
+        <div id="errorMessage">Invalid Login ID or Password.</div>
+      </div>
+
+      <!-- Success Message Alert -->
+      <div id="successAlert" class="alert alert-success d-none align-items-center py-2 px-3 small" role="alert">
+        <i class="bi bi-check-circle-fill me-2 fs-6"></i>
+        <div>Login successful! Redirecting...</div>
+      </div>
+
+      <form id="loginForm" novalidate>
+        <!-- Login ID -->
+        <div class="mb-3">
+          <label for="loginId" class="form-label small fw-semibold text-secondary">Login ID / Email</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light text-secondary border-end-0">
+              <i class="bi bi-person-fill"></i>
+            </span>
+            <input 
+              type="text" 
+              class="form-control border-start-0" 
+              style="padding-left: 5px;"
+              id="loginId" 
+              placeholder="name@example.com" 
+              autocomplete="username" 
+              required
+            >
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="mb-4">
+          <label for="password" class="form-label small fw-semibold text-secondary">Password</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light text-secondary border-end-0">
+              <i class="bi bi-key-fill"></i>
+            </span>
+            <input 
+              type="password" 
+              class="form-control border-start-0 border-end-0" 
+              style="padding-left: 5px;"
+              id="password" 
+              placeholder="Enter your password" 
+              autocomplete="current-password" 
+              required
+            >
+            <button class="btn password-toggle-btn" type="button" id="togglePasswordBtn" title="Toggle password visibility">
+              <i class="bi bi-eye" id="togglePasswordIcon"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary w-100 mb-2 d-flex align-items-center justify-content-center" id="submitBtn">
+          <span>Sign In</span>
+          <i class="bi bi-arrow-right-short ms-1 fs-5"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+  <!-- Login Logic Script -->
+  <script>
+    const VALID_ID = "admin@chooch.com";
+    const VALID_PASS = "!ChoochTemp";
+
+    const loginForm = document.getElementById('loginForm');
+    const loginIdInput = document.getElementById('loginId');
+    const passwordInput = document.getElementById('password');
+    const errorAlert = document.getElementById('errorAlert');
+    const errorMessage = document.getElementById('errorMessage');
+    const successAlert = document.getElementById('successAlert');
+    const loginCard = document.getElementById('loginCard');
+    const submitBtn = document.getElementById('submitBtn');
+    const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+    const togglePasswordIcon = document.getElementById('togglePasswordIcon');
+
+    // Password visibility toggle
+    togglePasswordBtn.addEventListener('click', () => {
+      const isPassword = passwordInput.getAttribute('type') === 'password';
+      passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+      togglePasswordIcon.classList.toggle('bi-eye', !isPassword);
+      togglePasswordIcon.classList.toggle('bi-eye-slash', isPassword);
+    });
+
+    // Form submission
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const enteredId = loginIdInput.value.trim();
+      const enteredPassword = passwordInput.value;
+
+      errorAlert.classList.add('d-none');
+      loginCard.classList.remove('shake-animation');
+
+      if (!enteredId || !enteredPassword) {
+        showError("Please enter both Login ID and Password.");
+        return;
+      }
+
+      if (enteredId === VALID_ID && enteredPassword === VALID_PASS) {
+        // Successful login
+        sessionStorage.setItem('isLoggedIn', 'true');
+        sessionStorage.setItem('userEmail', enteredId);
+
+        errorAlert.classList.add('d-none');
+        successAlert.classList.remove('d-none');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `
+          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+          Redirecting...
+        `;
+
+        setTimeout(() => {
+          window.location.href = 'video.html';
+        }, 800);
+      } else {
+        showError("Invalid Login ID or Password. Please try again.");
+      }
+    });
+
+    function showError(msg) {
+      errorMessage.textContent = msg;
+      errorAlert.classList.remove('d-none');
+      loginCard.classList.add('shake-animation');
+      setTimeout(() => {
+        loginCard.classList.remove('shake-animation');
+      }, 500);
+    }
+  </script>
+</body>
+</html>
